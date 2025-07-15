@@ -40,3 +40,7 @@ a {
     color-scheme: dark;
   }
 }
+
+.main-content {
+  padding-top: 80px; /* So content doesn’t hide behind fixed header */
+}
