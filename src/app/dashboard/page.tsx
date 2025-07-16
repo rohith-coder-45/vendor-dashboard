@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react';
 import useAuth from '../utils/useAuth';
 import styles from './dashboard.module.css';
 
+type Invoice = {
+  amount: number | string;
+};
+
+type Booking = {
+  id: string;
+  status: string;
+};
+
 export default function DashboardPage() {
   useAuth();
 
@@ -15,8 +24,8 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    const manualBookings = JSON.parse(localStorage.getItem('manual_bookings') || '[]');
-    const dummyBookings = [
+    const manualBookings: Booking[] = JSON.parse(localStorage.getItem('manual_bookings') || '[]');
+    const dummyBookings: Booking[] = [
       { id: 'BK001', status: 'Ongoing' },
       { id: 'BK002', status: 'Completed' },
     ];
@@ -24,8 +33,8 @@ export default function DashboardPage() {
     const allBookings = [...manualBookings, ...dummyBookings];
     const completed = allBookings.filter((b) => b.status === 'Completed');
 
-    const invoices = JSON.parse(localStorage.getItem('vendor_invoices') || '[]');
-    const totalAmount = invoices.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0);
+    const invoices: Invoice[] = JSON.parse(localStorage.getItem('vendor_invoices') || '[]');
+    const totalAmount = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
 
     setSummary({
       totalBookings: allBookings.length,
