@@ -1,81 +1,109 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import useAuth from '../utils/useAuth';
 import styles from './manual.module.css';
 
 type Booking = {
-  guestName: string;
+  id: string;
+  date: string;
+  driver: string;
+  vehicleType: string;
+  vehicleNo: string;
+  location: string;
   contact: string;
   company: string;
-  vehicleType: string;
-  pickup: string;
-  drop: string;
-  date: string;
-  time: string;
+  status: string;
 };
 
 export default function ManualBookingPage() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  useAuth();
+
   const [form, setForm] = useState<Booking>({
-    guestName: '',
+    id: '',
+    date: '',
+    driver: '',
+    vehicleType: '',
+    vehicleNo: '',
+    location: '',
     contact: '',
     company: '',
-    vehicleType: '',
-    pickup: '',
-    drop: '',
-    date: '',
-    time: '',
+    status: 'Ongoing',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('manual_bookings');
+    if (stored) setBookings(JSON.parse(stored));
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = () => {
-    if (!form.guestName || !form.contact || !form.pickup || !form.drop) {
-      alert('Please fill all required fields');
-      return;
+    if (!form.id || !form.driver || !form.vehicleNo) {
+      return alert('Please fill required fields');
     }
 
-    setBookings([...bookings, form]);
+    const updated = [...bookings, form];
+    setBookings(updated);
+    localStorage.setItem('manual_bookings', JSON.stringify(updated));
+
     setForm({
-      guestName: '',
+      id: '',
+      date: '',
+      driver: '',
+      vehicleType: '',
+      vehicleNo: '',
+      location: '',
       contact: '',
       company: '',
-      vehicleType: '',
-      pickup: '',
-      drop: '',
-      date: '',
-      time: '',
+      status: 'Ongoing',
     });
   };
 
   return (
     <main className={styles.container}>
-      <h1 className={styles.heading}>✍️ Manual Booking</h1>
+      <h1 className={styles.heading}>📝 Manual Booking</h1>
 
       <div className={styles.form}>
-        <input name="guestName" value={form.guestName} onChange={handleChange} placeholder="Guest Name" />
-        <input name="contact" value={form.contact} onChange={handleChange} placeholder="Guest Contact" />
-        <input name="company" value={form.company} onChange={handleChange} placeholder="Company Name" />
-        <input name="vehicleType" value={form.vehicleType} onChange={handleChange} placeholder="Vehicle Type" />
-        <input name="pickup" value={form.pickup} onChange={handleChange} placeholder="Pick-up Location" />
-        <input name="drop" value={form.drop} onChange={handleChange} placeholder="Drop Location" />
-        <input name="date" value={form.date} onChange={handleChange} type="date" placeholder="Date" />
-        <input name="time" value={form.time} onChange={handleChange} type="time" placeholder="Time" />
-        <button onClick={handleSubmit}>Confirm Booking</button>
+        <input name="id" placeholder="Booking ID" value={form.id} onChange={handleChange} />
+        <input
+          name="date"
+          type="date"
+          value={form.date}
+          onChange={handleChange}
+          placeholder="Booking Date"
+          title="Booking Date"
+        />
+        <input name="driver" placeholder="Driver Name" value={form.driver} onChange={handleChange} />
+        <input name="vehicleType" placeholder="Vehicle Type" value={form.vehicleType} onChange={handleChange} />
+        <input name="vehicleNo" placeholder="Vehicle Number" value={form.vehicleNo} onChange={handleChange} />
+        <input name="location" placeholder="Pickup Location" value={form.location} onChange={handleChange} />
+        <input name="contact" placeholder="Contact Number" value={form.contact} onChange={handleChange} />
+        <input name="company" placeholder="Company Name" value={form.company} onChange={handleChange} />
+        <label htmlFor="status">Booking Status</label>
+        <select id="status" name="status" value={form.status} onChange={handleChange}>
+          <option value="Ongoing">Ongoing</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <button onClick={handleSubmit}>➕ Add Booking</button>
       </div>
 
-      <div className={styles.upcoming}>
-        <h2>📅 Upcoming Bookings</h2>
-        {bookings.map((b, idx) => (
-          <div key={idx} className={styles.card}>
-            <h3>{b.guestName}</h3>
+      <div className={styles.list}>
+        <h2>📋 Submitted Bookings</h2>
+        {bookings.map((b) => (
+          <div key={b.id} className={styles.card}>
+            <h3>{b.id} - {b.status}</h3>
+            <p>Date: {b.date}</p>
+            <p>Driver: {b.driver}</p>
+            <p>Vehicle: {b.vehicleType} - {b.vehicleNo}</p>
+            <p>Location: {b.location}</p>
             <p>Contact: {b.contact}</p>
             <p>Company: {b.company}</p>
-            <p>Vehicle: {b.vehicleType}</p>
-            <p>From: {b.pickup} → {b.drop}</p>
-            <p>On: {b.date} at {b.time}</p>
           </div>
         ))}
       </div>
