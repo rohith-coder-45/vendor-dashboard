@@ -1,10 +1,10 @@
 'use client';
 
-import useAuth from '../utils/useAuth'; // 👈 Adjust path as needed
+import useAuth from '../utils/useAuth'; // ✅ Route protection
 import styles from './bookings.module.css';
 
 export default function BookingsPage() {
-  useAuth(); // 👈 Protect this route
+  useAuth(); // 🔐 Enforce login
 
   const dummyBookings = [
     {

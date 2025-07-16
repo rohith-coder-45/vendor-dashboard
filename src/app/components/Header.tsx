@@ -19,6 +19,12 @@ export default function Header() {
     router.push('/login');
   };
 
+  const switchAccount = () => {
+    localStorage.removeItem('vendor_token');
+    localStorage.removeItem('vendor_profile');
+    router.push('/login');
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.logo}>🚖 Vendor Dashboard</div>
@@ -37,7 +43,9 @@ export default function Header() {
               >
                 📝 Edit Profile
               </div>
-              <div className={styles.dropdownItem}>🔄 Switch Account</div>
+              <div className={styles.dropdownItem} onClick={switchAccount}>
+                🔄 Switch Account
+              </div>
               <div className={styles.dropdownItem} onClick={logout}>
                 🚪 Logout
               </div>
