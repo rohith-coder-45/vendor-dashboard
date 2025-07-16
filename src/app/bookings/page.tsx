@@ -24,7 +24,7 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/bookings')
+    fetch('https://vendor-dashboard-backend.onrender.com/api/bookings')
       .then((res) => res.json())
       .then((data) => {
         setBookings(data);
