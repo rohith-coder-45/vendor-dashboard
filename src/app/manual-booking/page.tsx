@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import useAuth from '../utils/useAuth';
@@ -17,11 +17,10 @@ type Booking = {
   status: string;
 };
 
-// 🌐 Replace with your actual deployed backend URL
-const API_BASE_URL = 'https://vendor-dashboard-backend.onrender.com';
-
 export default function ManualBookingPage() {
   useAuth();
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const [form, setForm] = useState<Booking>({
     id: '',
@@ -36,13 +35,20 @@ export default function ManualBookingPage() {
   });
 
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/bookings`)
+    fetch(`${apiUrl}/api/bookings`)
       .then((res) => res.json())
-      .then((data) => setBookings(data))
-      .catch((err) => console.error('Error loading bookings:', err));
-  }, []);
+      .then((data) => {
+        setBookings(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading bookings:', err);
+        setLoading(false);
+      });
+  }, [apiUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -55,7 +61,7 @@ export default function ManualBookingPage() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/bookings`, {
+      const res = await fetch(`${apiUrl}/api/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -73,14 +79,51 @@ export default function ManualBookingPage() {
           company: '',
           status: 'Ongoing',
         });
-
-        const updated = await fetch(`${API_BASE_URL}/api/bookings`).then((r) => r.json());
-        setBookings(updated);
+        refreshBookings();
       } else {
         alert('Failed to submit booking.');
       }
     } catch (err) {
       console.error('Submit error:', err);
+      alert('Server error.');
+    }
+  };
+
+  const refreshBookings = async () => {
+    const updated = await fetch(`${apiUrl}/api/bookings`).then((r) => r.json());
+    setBookings(updated);
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`${apiUrl}/api/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        refreshBookings();
+      } else {
+        alert('Failed to update status.');
+      }
+    } catch (err) {
+      console.error('Status update error:', err);
+      alert('Server error.');
+    }
+  };
+
+  const deleteBooking = async (id: string) => {
+    try {
+      const res = await fetch(`${apiUrl}/api/bookings/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        refreshBookings();
+      } else {
+        alert('Failed to delete booking.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
       alert('Server error.');
     }
   };
@@ -122,17 +165,26 @@ export default function ManualBookingPage() {
 
       <div className={styles.list}>
         <h2>📋 Submitted Bookings</h2>
-        {bookings.map((b) => (
-          <div key={b._id || b.id} className={styles.card}>
-            <h3>{b.id} - {b.status}</h3>
-            <p>Date: {b.date}</p>
-            <p>Driver: {b.driver}</p>
-            <p>Vehicle: {b.vehicleType} - {b.vehicleNo}</p>
-            <p>Location: {b.location}</p>
-            <p>Contact: {b.contact}</p>
-            <p>Company: {b.company}</p>
-          </div>
-        ))}
+        {loading ? (
+          <p>Loading bookings...</p>
+        ) : bookings.length === 0 ? (
+          <p>No bookings found.</p>
+        ) : (
+          bookings.map((b) => (
+            <div key={b._id || b.id} className={styles.card}>
+              <h3>{b.id} - {b.status}</h3>
+              <p>Date: {b.date}</p>
+              <p>Driver: {b.driver}</p>
+              <p>Vehicle: {b.vehicleType} - {b.vehicleNo}</p>
+              <p>Location: {b.location}</p>
+              <p>Contact: {b.contact}</p>
+              <p>Company: {b.company}</p>
+              <button onClick={() => updateStatus(b._id || '', 'Ongoing')}>▶️ Start Trip</button>
+              <button onClick={() => updateStatus(b._id || '', 'Completed')}>✅ End Trip</button>
+              <button onClick={() => deleteBooking(b._id || '')}>🗑️ Delete</button>
+            </div>
+          ))
+        )}
       </div>
     </main>
   );
