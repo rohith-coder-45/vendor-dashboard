@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import useAuth from '../utils/useAuth';
 import styles from './manual.module.css';
+
 type Booking = {
-  _id?: string; // Add this line
+  _id?: string;
   id: string;
   date: string;
   driver: string;
@@ -15,6 +16,9 @@ type Booking = {
   company: string;
   status: string;
 };
+
+// 🌐 Replace with your actual deployed backend URL
+const API_BASE_URL = 'https://vendor-dashboard-backend.onrender.com';
 
 export default function ManualBookingPage() {
   useAuth();
@@ -33,9 +37,8 @@ export default function ManualBookingPage() {
 
   const [bookings, setBookings] = useState<Booking[]>([]);
 
-  // 🔁 Fetch all bookings on page load
   useEffect(() => {
-    fetch('http://localhost:5000/api/bookings')
+    fetch(`${API_BASE_URL}/api/bookings`)
       .then((res) => res.json())
       .then((data) => setBookings(data))
       .catch((err) => console.error('Error loading bookings:', err));
@@ -45,7 +48,6 @@ export default function ManualBookingPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 🚀 Submit booking to backend
   const handleSubmit = async () => {
     if (!form.id || !form.driver || !form.vehicleNo) {
       alert('Please fill required fields');
@@ -53,7 +55,7 @@ export default function ManualBookingPage() {
     }
 
     try {
-      const res = await fetch('https://vendor-dashboard-backend.onrender.com/api/bookings', {
+      const res = await fetch(`${API_BASE_URL}/api/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -72,8 +74,7 @@ export default function ManualBookingPage() {
           status: 'Ongoing',
         });
 
-        // Re-fetch updated list
-        const updated = await fetch('http://localhost:5000/api/bookings').then((r) => r.json());
+        const updated = await fetch(`${API_BASE_URL}/api/bookings`).then((r) => r.json());
         setBookings(updated);
       } else {
         alert('Failed to submit booking.');
@@ -122,8 +123,8 @@ export default function ManualBookingPage() {
       <div className={styles.list}>
         <h2>📋 Submitted Bookings</h2>
         {bookings.map((b) => (
-          <div key={b._id} className={styles.card}>
-            <h3>{b._id} - {b.status}</h3>
+          <div key={b._id || b.id} className={styles.card}>
+            <h3>{b.id} - {b.status}</h3>
             <p>Date: {b.date}</p>
             <p>Driver: {b.driver}</p>
             <p>Vehicle: {b.vehicleType} - {b.vehicleNo}</p>

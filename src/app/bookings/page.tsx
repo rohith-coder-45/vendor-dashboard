@@ -57,7 +57,7 @@ export default function BookingsPage() {
             <span>Company</span>
           </div>
           {bookings.map((b) => (
-            <div key={b._id} className={styles.tableRow}>
+            <div key={b._id || b.id} className={styles.tableRow}>
               <span>{b.id}</span>
               <span>{b.date}</span>
               <span className={styles.status}>{b.status}</span>
