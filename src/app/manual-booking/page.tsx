@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import useAuth from '../utils/useAuth';
 import styles from './manual.module.css';
-
 type Booking = {
+  _id?: string; // Add this line
   id: string;
   date: string;
   driver: string;
@@ -33,35 +33,55 @@ export default function ManualBookingPage() {
 
   const [bookings, setBookings] = useState<Booking[]>([]);
 
+  // 🔁 Fetch all bookings on page load
   useEffect(() => {
-    const stored = localStorage.getItem('manual_bookings');
-    if (stored) setBookings(JSON.parse(stored));
+    fetch('http://localhost:5000/api/bookings')
+      .then((res) => res.json())
+      .then((data) => setBookings(data))
+      .catch((err) => console.error('Error loading bookings:', err));
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
+  // 🚀 Submit booking to backend
+  const handleSubmit = async () => {
     if (!form.id || !form.driver || !form.vehicleNo) {
-      return alert('Please fill required fields');
+      alert('Please fill required fields');
+      return;
     }
 
-    const updated = [...bookings, form];
-    setBookings(updated);
-    localStorage.setItem('manual_bookings', JSON.stringify(updated));
+    try {
+      const res = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
 
-    setForm({
-      id: '',
-      date: '',
-      driver: '',
-      vehicleType: '',
-      vehicleNo: '',
-      location: '',
-      contact: '',
-      company: '',
-      status: 'Ongoing',
-    });
+      if (res.ok) {
+        setForm({
+          id: '',
+          date: '',
+          driver: '',
+          vehicleType: '',
+          vehicleNo: '',
+          location: '',
+          contact: '',
+          company: '',
+          status: 'Ongoing',
+        });
+
+        // Re-fetch updated list
+        const updated = await fetch('http://localhost:5000/api/bookings').then((r) => r.json());
+        setBookings(updated);
+      } else {
+        alert('Failed to submit booking.');
+      }
+    } catch (err) {
+      console.error('Submit error:', err);
+      alert('Server error.');
+    }
   };
 
   return (
@@ -85,7 +105,13 @@ export default function ManualBookingPage() {
         <input name="contact" placeholder="Contact Number" value={form.contact} onChange={handleChange} />
         <input name="company" placeholder="Company Name" value={form.company} onChange={handleChange} />
         <label htmlFor="status">Booking Status</label>
-        <select id="status" name="status" value={form.status} onChange={handleChange}>
+        <select
+          id="status"
+          name="status"
+          value={form.status}
+          onChange={handleChange}
+          title="Booking Status"
+        >
           <option value="Ongoing">Ongoing</option>
           <option value="Completed">Completed</option>
           <option value="Cancelled">Cancelled</option>
@@ -96,8 +122,8 @@ export default function ManualBookingPage() {
       <div className={styles.list}>
         <h2>📋 Submitted Bookings</h2>
         {bookings.map((b) => (
-          <div key={b.id} className={styles.card}>
-            <h3>{b.id} - {b.status}</h3>
+          <div key={b._id} className={styles.card}>
+            <h3>{b._id} - {b.status}</h3>
             <p>Date: {b.date}</p>
             <p>Driver: {b.driver}</p>
             <p>Vehicle: {b.vehicleType} - {b.vehicleNo}</p>
